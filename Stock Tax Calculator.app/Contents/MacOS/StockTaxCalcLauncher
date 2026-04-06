@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BUNDLE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+RESOURCE_DIR="$BUNDLE_DIR/Contents/Resources"
+REPO_ROOT="$(cd "$BUNDLE_DIR/.." && pwd)"
+
+REPO_WEB_DIR="$REPO_ROOT/web"
+BUNDLED_WEB_DIR="$RESOURCE_DIR/web"
+
+show_error() {
+  local message="$1"
+  /usr/bin/osascript -e "display alert \"Stock Tax Calculator\" message \"$message\" as critical"
+}
+
+if [[ -f "$REPO_WEB_DIR/index.html" ]]; then
+  export STOCK_TAX_CALC_WEB_ROOT="$REPO_WEB_DIR"
+else
+  export STOCK_TAX_CALC_WEB_ROOT="$BUNDLED_WEB_DIR"
+fi
+
+export STOCK_TAX_CALC_INDEX="$STOCK_TAX_CALC_WEB_ROOT/index.html"
+
+if [[ ! -f "$STOCK_TAX_CALC_INDEX" ]]; then
+  show_error "The calculator files could not be found."
+  exit 1
+fi
+
+if ! /usr/bin/osascript -l JavaScript "$RESOURCE_DIR/StockTaxCalcLauncher.jxa"; then
+  /usr/bin/open "$STOCK_TAX_CALC_INDEX"
+fi

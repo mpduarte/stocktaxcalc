@@ -1,0 +1,62 @@
+ObjC.import("Cocoa");
+ObjC.import("WebKit");
+
+function env(name) {
+  return ObjC.unwrap($.NSProcessInfo.processInfo.environment.objectForKey(name));
+}
+
+const indexPath = env("STOCK_TAX_CALC_INDEX");
+const webRootPath = env("STOCK_TAX_CALC_WEB_ROOT");
+
+ObjC.registerSubclass({
+  name: "StockTaxCalcAppDelegate",
+  protocols: ["NSApplicationDelegate"],
+  methods: {
+    "applicationDidFinishLaunching:": {
+      types: ["void", ["id"]],
+      implementation: function () {
+        const styleMask =
+          $.NSWindowStyleMaskTitled |
+          $.NSWindowStyleMaskClosable |
+          $.NSWindowStyleMaskMiniaturizable |
+          $.NSWindowStyleMaskResizable;
+
+        const frame = $.NSMakeRect(0, 0, 1200, 860);
+        this.window = $.NSWindow.alloc.initWithContentRectStyleMaskBackingDefer(
+          frame,
+          styleMask,
+          $.NSBackingStoreBuffered,
+          false
+        );
+
+        this.window.title = "Stock Tax Calculator";
+        this.window.center();
+
+        const configuration = $.WKWebViewConfiguration.alloc.init();
+        this.webView = $.WKWebView.alloc.initWithFrameConfiguration(frame, configuration);
+        this.webView.autoresizingMask = $.NSViewWidthSizable | $.NSViewHeightSizable;
+
+        this.window.contentView.addSubview(this.webView);
+
+        const indexURL = $.NSURL.fileURLWithPath($(indexPath));
+        const webRootURL = $.NSURL.fileURLWithPath($(webRootPath));
+        this.webView.loadFileURLAllowingReadAccessToURL(indexURL, webRootURL);
+
+        this.window.makeKeyAndOrderFront(null);
+        $.NSApp.activateIgnoringOtherApps(true);
+      }
+    },
+    "applicationShouldTerminateAfterLastWindowClosed:": {
+      types: ["bool", ["id"]],
+      implementation: function () {
+        return true;
+      }
+    }
+  }
+});
+
+const app = $.NSApplication.sharedApplication;
+const delegate = $.StockTaxCalcAppDelegate.alloc.init();
+app.delegate = delegate;
+app.setActivationPolicy($.NSApplicationActivationPolicyRegular);
+app.run();

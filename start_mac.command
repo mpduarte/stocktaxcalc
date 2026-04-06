@@ -5,9 +5,16 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+if command -v swift >/dev/null 2>&1; then
+  echo "Launching the native macOS app..."
+  echo "The first run may take a moment while Swift builds the app."
+  swift run StockTaxCalcMacApp
+  exit 0
+fi
+
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "python3 was not found."
-  echo "Install Python 3, then run this script again."
+  echo "Neither swift nor python3 was found."
+  echo "Install Xcode Command Line Tools for the native app, or Python 3 for the browser fallback."
   exit 1
 fi
 
@@ -54,7 +61,7 @@ for _ in {1..40}; do
   sleep 0.25
 done
 
-echo "Stock Sale Tax Estimator is running at $APP_URL"
+echo "Swift was not available, so the browser version is running at $APP_URL"
 echo "Press Control-C in this window to stop the server."
 
 open "$APP_URL"
